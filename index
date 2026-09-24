@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extremwertprobleme mit Rechtecken</title>
+
+  <style>
+    :root {
+      --blue: #2563eb;
+      --blue-light: #dbeafe;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --orange: #ea580c;
+      --orange-light: #ffedd5;
+      --purple: #7c3aed;
+      --purple-light: #ede9fe;
+      --gray: #475569;
+      --light-gray: #f1f5f9;
+      --dark: #1e293b;
+      --white: #ffffff;
+      --shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(135deg, #eff6ff, #f8fafc);
+    }
+
+    header {
+      padding: 2.2rem 1rem;
+      color: white;
+      text-align: center;
+      background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+    }
+
+    header h1 {
+      margin: 0 0 0.7rem;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+    }
+
+    header p {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    main {
+      width: min(1250px, 95%);
+      margin: 2rem auto 4rem;
+    }
+
+    .intro,
+    .task-card {
+      background: var(--white);
+      border-radius: 1rem;
+      padding: 1.4rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .intro {
+      line-height: 1.6;
+      color: var(--gray);
+    }
+
+    .task-navigation {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.6rem;
+      margin: 1rem 0 1.5rem;
+    }
+
+    .task-navigation button,
+    .reset-button {
+      border: none;
+      border-radius: 0.55rem;
+      padding: 0.75rem 1rem;
+      font-weight: bold;
+      color: white;
+      background: #64748b;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .task-navigation button:hover,
+    .reset-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+    }
+
+    .task-navigation button.active {
+      background: var(--blue);
+    }
+
+    .task-title {
+      margin-top: 0;
+      color: var(--purple);
+    }
+
+    .task-description {
+      line-height: 1.6;
+    }
+
+    .task-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr);
+      gap: 1.2rem;
+      margin-top: 1.3rem;
+    }
+
+    .visual-box {
+      padding: 1rem;
+      border: 2px solid #cbd5e1;
+      border-radius: 0.8rem;
+      background: #f8fafc;
+    }
+
+    .visual-box h3 {
+      margin-top: 0;
+      text-align: center;
+      color: var(--blue);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      min-height: 330px;
+      background:
+        linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+      background-size: 25px 25px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 0.6rem;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 330px;
+      background: white;
+      border: 1px dashed #cbd5e1;
+      border-radius: 0.6rem;
+    }
+
+    .controls {
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 0.7rem;
+      background: var(--blue-light);
+    }
+
+    .controls label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    .value-display {
+      margin-top: 0.6rem;
+      text-align: center;
+      color: var(--blue);
+      font-size: 1.15rem;
+      font-weight: bold;
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .data-box {
+      padding: 1rem;
+      border-radius: 0.7rem;
+      background: var(--light-gray);
+      border-left: 5px solid var(--blue);
+      line-height: 1.5;
+    }
+
+    .data-box strong {
+      color: var(--blue);
+    }
+
+    .extremum-box {
+      padding: 1rem;
+      margin-top: 1rem;
+      border-left: 5px solid var(--green);
+      border-radius: 0.6rem;
+      background: var(--green-light);
+      line-height: 1.6;
+    }
+
+    .formula {
+      padding: 0.8rem;
+      margin: 0.6rem 0;
+      overflow-x: auto;
+      border-radius: 0.6rem;
+      background: var(--purple-light);
+      color: #5b21b6;
+      font-family: "Courier New", monospace;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    footer {
+      padding: 1.5rem;
+      color: #64748b;
+      text-align: center;
+    }
+
+    @media (max-width: 800px) {
+      .task-layout {
+        grid-template-columns: 1fr;
+      }
+
+      svg,
+      canvas {
+        min-height: 280px;
+        height: 280px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Extremwertprobleme mit Rechtecken</h1>
+    <p>Interaktive Skizzen und Funktionsgraphen zu Nebenbedingungen</p>
+  </header>
+
+  <main>
+    <section class="intro">
+      <strong>Hinweis zur Bedienung:</strong>
+      Wähle eine Aufgabe aus und verändere anschließend die Seitenlänge mit dem
+      Schieberegler. Die Skizze und der Funktionsgraph werden automatisch angepasst.
+      Der grüne Punkt zeigt die optimale Lösung.
+    </section>
+
+    <nav class="task-navigation" aria-label="Aufgabenauswahl">
+      <button class="task-button active" data-task="1">Aufgabe 1</button>
+      <button class="task-button" data-task="2">Aufgabe 2</button>
+      <button class="task-button" data-task="3">Aufgabe 3</button>
+      <button class="task-button" data-task="4">Aufgabe 4</button>
+    </nav>
+
+    <section class="task-card">
+      <h2 id="taskTitle" class="task-title"></h2>
+      <p id="taskDescription" class="task-description"></p>
+
+      <div class="data-grid">
+        <div class="data-box">
+          <strong>1. Skizze</strong><br>
+          Das Rechteck wird interaktiv dargestellt.
+        </div>
+
+        <div class="data-box">
+          <strong>2. Zielgröße</strong><br>
+          <span id="goalText"></span>
+        </div>
+
+        <div class="data-box">
+          <strong>3. Nebenbedingung</strong><br>
+          <span id="constraintText"></span>
+        </div>
+
+        <div class="data-box">
+          <strong>5. Definitionsbereich</strong><br>
+          <span id="domainText"></span>
+        </div>
+      </div>
+
+      <div class="formula">
+        <span id="functionText"></span>
+      </div>
+
+      <div class="task-layout">
+        <div class="visual-box">
+          <h3>Skizze des Rechtecks</h3>
+          <svg id="rectangleSvg" viewBox="0 0 600 360" role="img"
+               aria-label="Interaktive Skizze des Rechtecks">
+          </svg>
+        </div>
+
+        <div class="visual-box">
+          <h3 id="graphTitle">Funktionsgraph</h3>
+          <canvas id="graphCanvas" width="700" height="420"></canvas>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label for="variableSlider">
+          Veränderliche Seitenlänge:
+        </label>
+
+        <input id="variableSlider" type="range">
+
+        <div id="valueDisplay" class="value-display"></div>
+      </div>
+
+      <div class="extremum-box">
+        <strong>Extremstelle:</strong>
+        <span id="extremumText"></span>
+      </div>
+
+      <button id="resetButton" class="reset-button">
+        Werte zurücksetzen
+      </button>
+    </section>
+  </main>
+
+  <footer>
+    Interaktive Visualisierung von Extremwertproblemen mit Nebenbedingungen
+  </footer>
+
+  <script>
+    const tasks = {
+      1: {
+        title: "Aufgabe 1: Rechteckiges Gehege mit 300 m Zaun",
+        description:
+          "Ein rechteckiges Gehege soll mit einer insgesamt 300 m langen Zaunanlage umzäunt werden. Bestimme die Seitenlängen so, dass die Fläche möglichst groß wird.",
+        goal:
+          "Die Fläche A soll möglichst groß werden.",
+        constraint:
+          "2a + 2b = 300",
+        function:
+          "Zielfunktion: A(b) = b · (150 − b)",
+        domain:
+          "0 < b < 150",
+        variableName: "b",
+        fixedLabel: "a",
+        graphLabel: "Fläche A(b) in m²",
+        graphType: "Fläche",
+        unit: "m²",
+        min: 1,
+        max: 149,
+        step: 1,
+        initial: 50,
+        calculate: b => 150 - b,
+        objective: b => b * (150 - b),
+        optimumVariable: 75,
+        optimumFixed: 75,
+        optimumValue: 5625,
+        wall: false,
+        maximize: true
+      },
+
+      2: {
+        title: "Aufgabe 2: Gehege an einer Wand mit 500 m Zaun",
+        description:
+          "Ein rechteckiges Gehege liegt mit einer Seite an einer Wand. Deshalb müssen nur drei Seiten eingezäunt werden. Die Zaunlänge beträgt 500 m. Die Fläche soll möglichst groß werden.",
+        goal:
+          "Die Fläche A soll möglichst groß werden.",
+        constraint:
+          "a + 2b = 500",
+        function:
+          "Zielfunktion: A(b) = b · (500 − 2b)",
+        domain:
+          "0 < b < 250",
+        variableName: "b",
+        fixedLabel: "a",
+        graphLabel: "Fläche A(b) in m²",
+        graphType: "Fläche",
+        unit: "m²",
+        min: 1,
+        max: 249,
+        step: 1,
+        initial: 80,
+        calculate: b => 500 - 2 * b,
+        objective: b => b * (500 - 2 * b),
+        optimumVariable: 125,
+        optimumFixed: 250,
+        optimumValue: 31250,
+        wall: true,
+        maximize: true
+      },
+
+      3: {
+        title: "Aufgabe 3: Rechteck mit einer Fläche von 700 m²",
+        description:
+          "Ein rechteckiges Grundstück besitzt eine Fläche von 700 m². Bestimme die Seitenlängen so, dass der Umfang möglichst klein wird.",
+        goal:
+          "Der Umfang U soll möglichst klein werden.",
+        constraint:
+          "a · b = 700",
+        function:
+          "Zielfunktion: U(b) = 2b + 2 · 700/b",
+        domain:
+          "0 < b ≤ 100",
+        variableName: "b",
+        fixedLabel: "a",
+        graphLabel: "Umfang U(b) in m",
+        graphType: "Umfang",
+        unit: "m",
+        min: 1,
+        max: 100,
+        step: 1,
+        initial: 20,
+        calculate: b => 700 / b,
+        objective: b => 2 * b + 2 * 700 / b,
+        optimumVariable: Math.sqrt(700),
+        optimumFixed: Math.sqrt(700),
+        optimumValue: 4 * Math.sqrt(700),
+        wall: false,
+        maximize: false
+      },
+
+      4: {
+        title: "Aufgabe 4: Gehege an einer Wand mit 200 m² Fläche",
+        description:
+          "Ein rechteckiges Gehege liegt mit einer Seite an einer Wand. Die Fläche soll 200 m² betragen. Die drei übrigen Seiten sollen mit möglichst wenig Zaun eingezäunt werden.",
+        goal:
+          "Die benötigte Zaunlänge Z soll möglichst klein werden.",
+        constraint:
+          "a · b = 200",
+        function:
+          "Zielfunktion: Z(b) = 2b + 200/b",
+        domain:
+          "0 < b ≤ 40",
+        variableName: "b",
+        fixedLabel: "a",
+        graphLabel: "Zaunlänge Z(b) in m",
+        graphType: "Zaunlänge",
+        unit: "m",
+        min: 1,
+        max: 40,
+        step: 1,
+        initial: 10,
+        calculate: b => 200 / b,
+        objective: b => 2 * b + 200 / b,
+        optimumVariable: 10,
+        optimumFixed: 20,
+        optimumValue: 40,
+        wall: true,
+        maximize: false
+      }
+    };
+
+    let currentTask = 1;
+
+    const taskTitle = document.getElementById("taskTitle");
+    const taskDescription = document.getElementById("taskDescription");
+    const goalText = document.getElementById("goalText");
+    const constraintText = document.getElementById("constraintText");
+    const functionText = document.getElementById("functionText");
+    const domainText = document.getElementById("domainText");
+    const graphTitle = document.getElementById("graphTitle");
+    const variableSlider = document.getElementById("variableSlider");
+    const valueDisplay = document.getElementById("valueDisplay");
+    const extremumText = document.getElementById("extremumText");
+    const rectangleSvg = document.getElementById("rectangleSvg");
+    const graphCanvas = document.getElementById("graphCanvas");
+    const resetButton = document.getElementById("resetButton");
+
+    function formatNumber(number) {
+      if (!Number.isFinite(number)) {
+        return "—";
+      }
+
+      if (Math.abs(number - Math.round(number)) < 0.001) {
+        return Math.round(number).toString();
+      }
+
+      return number.toFixed(2);
+    }
+
+    function setTask(taskNumber) {
+      currentTask = taskNumber;
+      const task = tasks[currentTask];
+
+      document.querySelectorAll(".task-button").forEach(button => {
+        button.classList.toggle(
+          "active",
+          Number(button.dataset.task) === currentTask
+        );
+      });
+
+      taskTitle.textContent = task.title;
+      taskDescription.textContent = task.description;
+      goalText.textContent = task.goal;
+      constraintText.textContent = task.constraint;
+      functionText.textContent = task.function;
+      domainText.textContent = task.domain;
+      graphTitle.textContent = `Funktionsgraph: ${task.graphLabel}`;
+
+      variableSlider.min = task.min;
+      variableSlider.max = task.max;
+      variableSlider.step = task.step;
+      variableSlider.value = task.initial;
+
+      updateVisuals();
+    }
+
+    function updateVisuals() {
+      const task = tasks[currentTask];
+      const b = Number(variableSlider.value);
+      const a = task.calculate(b);
+      const objectiveValue = task.objective(b);
+
+      valueDisplay.innerHTML =
+        `b = ${formatNumber(b)} m &nbsp; | &nbsp; ` +
+        `a = ${formatNumber(a)} m &nbsp; | &nbsp; ` +
+        `${task.graphType} = ${formatNumber(objectiveValue)} ${task.unit}`;
+
+      const optimumText = task.maximize
+        ? `Bei b ≈ ${formatNumber(task.optimumVariable)} m und ` +
+          `a ≈ ${formatNumber(task.optimumFixed)} m ist die maximale ` +
+          `Fläche A ≈ ${formatNumber(task.optimumValue)} m².`
+        : `Bei b ≈ ${formatNumber(task.optimumVariable)} m und ` +
+          `a ≈ ${formatNumber(task.optimumFixed)} m ist der minimale Wert ` +
+          `${task.graphType} ≈ ${formatNumber(task.optimumValue)} ${task.unit}.`;
+
+      extremumText.textContent = optimumText;
+
+      drawRectangle(task, a, b);
+      drawGraph(task, b);
+    }
+
+    function createSvgElement(tag, attributes = {}) {
+      const element = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        tag
+      );
+
+      Object.entries(attributes).forEach(([key, value]) => {
+        element.setAttribute(key, value);
+      });
+
+      return element;
+    }
+
+    function drawRectangle(task, a, b) {
+      rectangleSvg.innerHTML = "";
+
+      const margin = 70;
+      const maxWidth = 450;
+      const maxHeight = 230;
+      const scale = Math.min(maxWidth / a, maxHeight / b);
+
+      const width = Math.max(70, a * scale);
+      const height = Math.max(55, b * scale);
+
+      const x = 300 - width / 2;
+      const y = task.wall
+        ? 285 - height
+        : 180 - height / 2;
+
+      if (task.wall) {
+        const wall = createSvgElement("line", {
+          x1: 60,
+          y1: y,
+          x2: 540,
+          y2: y,
+          stroke: "#334155",
+          "stroke-width": "9"
+        });
+
+        rectangleSvg.appendChild(wall);
+
+        const wallLabel = createSvgElement("text", {
+          x: 300,
+          y: y - 18,
+          "text-anchor": "middle",
+          fill: "#334155",
+          "font-size": "18",
+          "font-weight": "bold"
+        });
+
+        wallLabel.textContent = "Wand";
+        rectangleSvg.appendChild(wallLabel);
+      }
+
+      const rectangle = createSvgElement("rect", {
+        x,
+        y,
+        width,
+        height,
+        fill: "#dbeafe",
+        stroke: "#2563eb",
+        "stroke-width": "4",
+        rx: "4"
+      });
+
+      rectangleSvg.appendChild(rectangle);
+
+      const areaLabel = createSvgElement("text", {
+        x: 300,
+        y: y + height / 2 + 7,
+        "text-anchor": "middle",
+        fill: "#1d4ed8",
+        "font-size": "20",
+        "font-weight": "bold"
+      });
+
+      areaLabel.textContent = "Rechteck";
+      rectangleSvg.appendChild(areaLabel);
+
+      addDimensionLine(
+        x,
+        y + height + 35,
+        x + width,
+        y + height + 35,
+        `a = ${formatNumber(a)} m`
+      );
+
+      addDimensionLine(
+        x - 35,
+        y,
+        x - 35,
+        y + height,
+        `b = ${formatNumber(b)} m`,
+        true
+      );
+
+      if (task.wall) {
+        const fenceLabel = createSvgElement("text", {
+          x: 300,
+          y: 335,
+          "text-anchor": "middle",
+          fill: "#ea580c",
+          "font-size": "15",
+          "font-weight": "bold"
+        });
+
+        fenceLabel.textContent =
+          "Nur die drei übrigen Seiten werden eingezäunt";
+        rectangleSvg.appendChild(fenceLabel);
+      }
+    }
+
+    function addDimensionLine(x1, y1, x2, y2, label, vertical = false) {
+      const line = createSvgElement("line", {
+        x1,
+        y1,
+        x2,
+        y2,
+        stroke: "#475569",
+        "stroke-width": "2",
+        "marker-start": "url(#arrow)",
+        "marker-end": "url(#arrow)"
+      });
+
+      const defs = createSvgElement("defs");
+      const marker = createSvgElement("marker", {
+        id: "arrow",
+        markerWidth: "8",
+        markerHeight: "8",
+        refX: "4",
+        refY: "4",
+        orient: "auto"
+      });
+
+      const path = createSvgElement("path", {
+        d: "M 0 0 L 8 4 L 0 8 z",
+        fill: "#475569"
+      });
+
+      marker.appendChild(path);
+      defs.appendChild(marker);
+      rectangleSvg.appendChild(defs);
+      rectangleSvg.appendChild(line);
+
+      const text = createSvgElement("text", {
+        x: vertical ? x1 - 10 : (x1 + x2) / 2,
+        y: vertical ? (y1 + y2) / 2 : y1 + 22,
+        "text-anchor": vertical ? "end" : "middle",
+        fill: "#475569",
+        "font-size": "16",
+        "font-weight": "bold",
+        transform: vertical
+          ? `rotate(-90 ${x1 - 10} ${(y1 + y2) / 2})`
+          : ""
+      });
+
+      text.textContent = label;
+      rectangleSvg.appendChild(text);
+    }
+
+    function drawGraph(task, currentVariable) {
+      const canvas = graphCanvas;
+      const ctx = canvas.getContext("2d");
+
+      const width = canvas.width;
+      const height = canvas.height;
+      const padding = {
+        left: 65,
+        right: 25,
+        top: 25,
+        bottom: 55
+      };
+
+      ctx.clearRect(0, 0, width, height);
+
+      const xMin = task.min;
+      const xMax = task.max;
+      const samples = 250;
+
+      const points = [];
+
+      for (let i = 0; i <= samples; i++) {
+        const xValue = xMin + (xMax - xMin) * i / samples;
+        points.push({
+          x: xValue,
+          y: task.objective(xValue)
+        });
+      }
+
+      const yValues = points.map(point => point.y);
+      const rawYMin = Math.min(...yValues);
+      const rawYMax = Math.max(...yValues);
+      const yPadding = (rawYMax - rawYMin) * 0.12 || 1;
+      const yMin = Math.max(0, rawYMin - yPadding);
+      const yMax = rawYMax + yPadding;
+
+      function mapX(x) {
+        return padding.left +
+          (x - xMin) / (xMax - xMin) *
+          (width - padding.left - padding.right);
+      }
+
+      function mapY(y) {
+        return height - padding.bottom -
+          (y - yMin) / (yMax - yMin) *
+          (height - padding.top - padding.bottom);
+      }
+
+      ctx.strokeStyle = "#cbd5e1";
+      ctx.lineWidth = 1;
+
+      for (let i = 0; i <= 5; i++) {
+        const x = padding.left +
+          i / 5 * (width - padding.left - padding.right);
+
+        const y = padding.top +
+          i / 5 * (height - padding.top - padding.bottom);
+
+        ctx.beginPath();
+        ctx.moveTo(x, padding.top);
+        ctx.lineTo(x, height - padding.bottom);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "#334155";
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.moveTo(padding.left, padding.top);
+      ctx.lineTo(padding.left, height - padding.bottom);
+      ctx.lineTo(width - padding.right, height - padding.bottom);
+      ctx.stroke();
+
+      ctx.strokeStyle = "#2563eb";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+
+      points.forEach((point, index) => {
+        const px = mapX(point.x);
+        const py = mapY(point.y);
+
+        if (index === 0) {
+          ctx.moveTo(px, py);
+        } else {
+          ctx.lineTo(px, py);
+        }
+      });
+
+      ctx.stroke();
+
+      const currentY = task.objective(currentVariable);
+      const currentX = mapX(currentVariable);
+      const currentPixelY = mapY(currentY);
+
+      ctx.fillStyle = "#ea580c";
+      ctx.beginPath();
+      ctx.arc(currentX, currentPixelY, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      const optimumX = mapX(task.optimumVariable);
+      const optimumY = mapY(task.objective(task.optimumVariable));
+
+      ctx.fillStyle = "#16a34a";
+      ctx.beginPath();
+      ctx.arc(optimumX, optimumY, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#166534";
+      ctx.font = "bold 14px Arial";
+      ctx.fillText("Optimum", optimumX + 10, optimumY - 10);
+
+      ctx.fillStyle = "#9a3412";
+      ctx.fillText("aktuell", currentX + 10, currentPixelY + 20);
+
+      ctx.fillStyle = "#334155";
+      ctx.font = "14px Arial";
+      ctx.fillText("b in m", width - 65, height - 18);
+      ctx.save();
+      ctx.translate(18, 180);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(task.graphLabel, 0, 0);
+      ctx.restore();
+
+      ctx.fillText(
+        formatNumber(xMin),
+        padding.left - 5,
+        height - padding.bottom + 22
+      );
+
+      ctx.fillText(
+        formatNumber(xMax),
+        width - padding.right - 22,
+        height - padding.bottom + 22
+      );
+
+      ctx.fillText(
+        formatNumber(yMin),
+        padding.left - 45,
+        height - padding.bottom + 5
+      );
+
+      ctx.fillText(
+        formatNumber(yMax),
+        padding.left - 45,
+        padding.top + 5
+      );
+    }
+
+    document.querySelectorAll(".task-button").forEach(button => {
+      button.addEventListener("click", () => {
+        setTask(Number(button.dataset.task));
+      });
+    });
+
+    variableSlider.addEventListener("input", updateVisuals);
+
+    resetButton.addEventListener("click", () => {
+      variableSlider.value = tasks[currentTask].initial;
+      updateVisuals();
+    });
+
+    window.addEventListener("resize", updateVisuals);
+
+    setTask(1);
+  </script>
+</body>
+</html>
